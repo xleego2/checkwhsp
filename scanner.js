@@ -35,11 +35,11 @@ async function getWaSocket(accountIndex, ctx) {
     const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
     const { version } = await fetchLatestBaileysVersion();
     
-const { version, isLatest } = await fetchLatestBaileysVersion();
-console.log(`Using WA v${version.join('.')}, isLatest: ${isLatest}`);
+const { version: waVersion, isLatest } = await fetchLatestBaileysVersion();
+console.log(`Using WA v${waVersion.join('.')}, isLatest: ${isLatest}`);
 
 const sock = makeWASocket({
-version,
+version: waVersion,
 auth: state,
 printQRInTerminal: true,
 browser: ["Ubuntu", "Chrome", "22.04.4"],
