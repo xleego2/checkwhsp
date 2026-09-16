@@ -1,3 +1,5 @@
+const crypto = require("crypto");
+if (!globalThis.crypto) globalThis.crypto = crypto.webcrypto || crypto;
 console.log("جاري تشغيل البوت...");
 
 process.on('uncaughtException', (err) => {
