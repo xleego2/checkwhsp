@@ -1,23 +1,6 @@
 const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
 const qrcode = require('qrcode');
 
-async function checkSingleUsername(sock, username) {
-  try {
-    const jid = username.includes('@s.whatsapp.net') ? username : ${username}@s.whatsapp.net;
-    const [result] = await sock.onWhatsApp(jid);
-    if (result && result.exists) {
-      console.log(\nAccount exists: );
-      return result;
-    } else {
-      console.log(\nAccount does not exist: );
-      return null;
-    }
-  } catch (error) {
-    console.error(❌ Error checking :, error.message);
-    throw error;
-  }
-}
-
 async function connectWhatsApp() {
   const { state, saveCreds } = await useMultiFileAuthState('./sessions/account1');
   const sock = makeWASocket({ auth: state, printQRInTerminal: true, syncFullHistory: false });
