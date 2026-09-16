@@ -37,7 +37,7 @@ async function getWaSocket(accountIndex, ctx) {
     const sock = makeWASocket({
 auth: state,
 printQRInTerminal: true,
-browser: ['Ubuntu', 'Chrome', '20.0.04'],
+browser: Browsers.ubuntu('Desktop'),
 syncFullHistory: false,
 markOnlineOnConnect: false,
 connectTimeoutMs: 60000,
