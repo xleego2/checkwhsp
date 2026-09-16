@@ -33,7 +33,7 @@ async function getWaSocket(accountIndex, ctx) {
     await fsPromises.mkdir(sessionDir, { recursive: true });
 
     const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
-    const sock = const { version } = await fetchLatestBaileysVersion();
+    const { version } = await fetchLatestBaileysVersion();
     const sock = makeWASocket({
       version,
       browser: Browsers.ubuntu("Desktop"),
