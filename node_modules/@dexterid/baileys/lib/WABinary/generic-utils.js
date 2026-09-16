@@ -1,0 +1,252 @@
+import { Boom } from '@hapi/boom';
+import { proto } from '../../WAProto/index.js';
+import {} from './types.js';
+// some extra useful utilities
+export const getBinaryNodeChildren = (node, childTag) => {
+    if (Array.isArray(node?.content)) {
+        return node.content.filter(item => item.tag === childTag);
+    }
+    return [];
+};
+export const getAllBinaryNodeChildren = ({ content }) => {
+    if (Array.isArray(content)) {
+        return content;
+    }
+    return [];
+};
+export const getBinaryNodeChild = (node, childTag) => {
+    if (Array.isArray(node?.content)) {
+        return node?.content.find(item => item.tag === childTag);
+    }
+};
+export const getBinaryNodeChildBuffer = (node, childTag) => {
+    const child = getBinaryNodeChild(node, childTag)?.content;
+    if (Buffer.isBuffer(child) || child instanceof Uint8Array) {
+        return child;
+    }
+};
+// Returns the biz stanza nodes required for interactive/button messages
+export const getButtonArgs = (message) => {
+    const msgContent = message.viewOnceMessage?.message || message;
+    const interactiveMsg = msgContent.interactiveMessage || msgContent.interactive;
+    const flowMsg = interactiveMsg?.nativeFlowMessage;
+    const btnFirst = flowMsg?.buttons?.[0]?.name;
+
+    const ts = Math.floor(Date.now() / 1000) - 77980457;
+
+    const order_response_name = {
+        review_and_pay: 'order_details',
+        review_order: 'order_status',
+        payment_info: 'payment_info',
+        payment_status: 'payment_status',
+        payment_method: 'payment_method'
+    };
+
+    const flow_name = {
+        cta_catalog: 'cta_catalog',
+        mpm: 'mpm',
+        call_permission_request: 'call_permission_request',
+        call_request: 'call_permission_request',
+        view_catalog: 'automated_greeting_message_view_catalog',
+        automated_greeting_message_view_catalog: 'automated_greeting_message_view_catalog',
+        wa_pay_detail: 'wa_payment_transaction_details',
+        wa_payment_transaction_details: 'wa_payment_transaction_details',
+        send_location: 'send_location',
+        open_webview: 'open_webview',
+        galaxy_message: 'galaxy_message',
+    };
+
+    // Order response buttons
+    if (btnFirst && order_response_name[btnFirst]) {
+        return [{
+            tag: 'biz',
+            attrs: {
+                native_flow_name: order_response_name[btnFirst]
+            },
+            content: []
+        }];
+    }
+
+    // Interactive / native flow buttons
+    if (flowMsg || msgContent.buttonsMessage) {
+        const name = (btnFirst && flow_name[btnFirst]) ? flow_name[btnFirst] : 'mixed';
+        return [{
+            tag: 'biz',
+            attrs: {
+                actual_actors: '2',
+                host_storage: '2',
+                privacy_mode_ts: `${ts}`
+            },
+            content: [{
+                tag: 'engagement',
+                attrs: {
+                    customer_service_state: 'open',
+                    conversation_state: 'open'
+                }
+            }, {
+                tag: 'interactive',
+                attrs: {
+                    type: 'native_flow',
+                    v: '1'
+                },
+                content: [{
+                    tag: 'native_flow',
+                    attrs: {
+                        v: '9',
+                        name: name,
+                    },
+                    content: []
+                }]
+            }]
+        }];
+    }
+
+    // List messages
+    if (msgContent.listMessage) {
+        return [{
+            tag: 'biz',
+            attrs: {
+                actual_actors: '2',
+                host_storage: '2',
+                privacy_mode_ts: `${ts}`
+            },
+            content: [{
+                tag: 'engagement',
+                attrs: {
+                    customer_service_state: 'open',
+                    conversation_state: 'open'
+                }
+            }]
+        }];
+    }
+
+    // Fallback
+    return [{
+        tag: 'biz',
+        attrs: {
+            actual_actors: '2',
+            host_storage: '2',
+            privacy_mode_ts: `${ts}`
+        },
+        content: [{
+            tag: 'engagement',
+            attrs: {
+                customer_service_state: 'open',
+                conversation_state: 'open'
+            }
+        }]
+    }];
+};
+
+// Add button type detection helper
+export const getButtonType = (message) => {
+    if (message.listMessage) return 'list';
+    if (message.buttonsMessage) return 'buttons';
+    
+    // Check both interactiveMessage and interactive keys
+    const interactiveMsg = message.interactiveMessage || message.interactive;
+    if (!interactiveMsg?.nativeFlowMessage) return null;
+    
+    const btn = interactiveMsg?.nativeFlowMessage?.buttons?.[0]?.name;
+    if (['review_and_pay', 'review_order', 'payment_info', 'payment_status', 'payment_method'].includes(btn)) {
+        return btn;
+    }
+    
+    // Return 'interactive' for ANY native flow message that has buttons or nativeFlowMessage
+    if (interactiveMsg?.nativeFlowMessage?.buttons?.length || interactiveMsg?.nativeFlowMessage) {
+        return 'interactive';
+    }
+    
+    return null;
+};
+
+export const getBinaryNodeChildString = (node, childTag) => {
+    const child = getBinaryNodeChild(node, childTag)?.content;
+    if (Buffer.isBuffer(child) || child instanceof Uint8Array) {
+        return Buffer.from(child).toString('utf-8');
+    }
+    else if (typeof child === 'string') {
+        return child;
+    }
+};
+export const getBinaryFilteredButtons = (nodeContent) => {
+	if (!Array.isArray(nodeContent)) return false
+
+    return nodeContent.some(a =>
+        ['native_flow'].includes(a?.content?.[0]?.content?.[0]?.tag) ||
+        ['interactive', 'buttons', 'list'].includes(a?.content?.[0]?.tag) ||
+        ['hsm', 'biz'].includes(a?.tag)
+    )
+}
+export const getBinaryNodeChildUInt = (node, childTag, length) => {
+    const buff = getBinaryNodeChildBuffer(node, childTag);
+    if (buff) {
+        return bufferToUInt(buff, length);
+    }
+};
+export const assertNodeErrorFree = (node) => {
+    const errNode = getBinaryNodeChild(node, 'error');
+    if (errNode) {
+        const errorCode = +errNode.attrs.code;
+        if (errorCode === 429) {
+            const error = new Boom('Rate limit', { data: 429 });
+            error.isRateLimit = true;
+            throw error;
+        }
+        throw new Boom(errNode.attrs.text || 'Unknown error', { data: errorCode });
+    }
+};
+export const reduceBinaryNodeToDictionary = (node, tag) => {
+    const nodes = getBinaryNodeChildren(node, tag);
+    const dict = nodes.reduce((dict, { attrs }) => {
+        if (typeof attrs.name === 'string') {
+            dict[attrs.name] = attrs.value || attrs.config_value;
+        }
+        else {
+            dict[attrs.config_code] = attrs.value || attrs.config_value;
+        }
+        return dict;
+    }, {});
+    return dict;
+};
+export const getBinaryNodeMessages = ({ content }) => {
+    const msgs = [];
+    if (Array.isArray(content)) {
+        for (const item of content) {
+            if (item.tag === 'message') {
+                msgs.push(proto.WebMessageInfo.decode(item.content).toJSON());
+            }
+        }
+    }
+    return msgs;
+};
+function bufferToUInt(e, t) {
+    let a = 0;
+    for (let i = 0; i < t; i++) {
+        a = 256 * a + e[i];
+    }
+    return a;
+}
+const tabs = (n) => '\t'.repeat(n);
+export function binaryNodeToString(node, i = 0) {
+    if (!node) {
+        return node;
+    }
+    if (typeof node === 'string') {
+        return tabs(i) + node;
+    }
+    if (node instanceof Uint8Array) {
+        return tabs(i) + Buffer.from(node).toString('hex');
+    }
+    if (Array.isArray(node)) {
+        return node.map(x => tabs(i + 1) + binaryNodeToString(x, i + 1)).join('\n');
+    }
+    const children = binaryNodeToString(node.content, i + 1);
+    const tag = `<${node.tag} ${Object.entries(node.attrs || {})
+        .filter(([, v]) => v !== undefined)
+        .map(([k, v]) => `${k}='${v}'`)
+        .join(' ')}`;
+    const content = children ? `>\n${children}\n${tabs(i)}</${node.tag}>` : '/>';
+    return tag + content;
+}
+//# sourceMappingURL=generic-utils.js.map
