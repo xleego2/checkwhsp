@@ -7,7 +7,7 @@ const qrcode = require('qrcode');
 const {
     default: makeWASocket,
     useMultiFileAuthState
-} = require('@dexterid/baileys');
+} = require('@whiskeysockets/baileys');
 
 const BASE_SESSIONS_PATH = './sessions';
 const RESULTS_PATH = './results';
@@ -26,7 +26,7 @@ async function getFileHash(filePath) {
 }
 
 /**
- * إنشاء جلسة حساب واتساب مع إرسال باركود التسجيل مباشرة لتيليجرام
+ * Ø¥Ù†Ø´Ø§Ø¡ Ø¬Ù„Ø³Ø© Ø­Ø³Ø§Ø¨ ÙˆØ§ØªØ³Ø§Ø¨ Ù…Ø¹ Ø¥Ø±Ø³Ø§Ù„ Ø¨Ø§Ø±ÙƒÙˆØ¯ Ø§Ù„ØªØ³Ø¬ÙŠÙ„ Ù…Ø¨Ø§Ø´Ø±Ø© Ù„ØªÙŠÙ„ÙŠØ¬Ø±Ø§Ù…
  */
 async function getWaSocket(accountIndex, ctx) {
     const sessionDir = path.join(BASE_SESSIONS_PATH, `account${accountIndex}`);
@@ -47,7 +47,7 @@ async function getWaSocket(accountIndex, ctx) {
         const timeout = setTimeout(() => {
             if (!connected && !closed) {
                 closed = true;
-                reject(new Error(`انتهت مهلة الاتصال للحساب ${accountIndex} (يرجى التأكد من مسح الباركود)`));
+                reject(new Error(`Ø§Ù†ØªÙ‡Øª Ù…Ù‡Ù„Ø© Ø§Ù„Ø§ØªØµØ§Ù„ Ù„Ù„Ø­Ø³Ø§Ø¨ ${accountIndex} (ÙŠØ±Ø¬Ù‰ Ø§Ù„ØªØ£ÙƒØ¯ Ù…Ù† Ù…Ø³Ø­ Ø§Ù„Ø¨Ø§Ø±ÙƒÙˆØ¯)`));
             }
         }, 60000);
 
@@ -55,28 +55,28 @@ async function getWaSocket(accountIndex, ctx) {
             const { connection, lastDisconnect, qr } = update;
 
             if (qr) {
-                console.log(`📱 تم توليد QR Code للحساب رقم ${accountIndex}`);
+                console.log(`ðŸ“± ØªÙ… ØªÙˆÙ„ÙŠØ¯ QR Code Ù„Ù„Ø­Ø³Ø§Ø¨ Ø±Ù‚Ù… ${accountIndex}`);
                 try {
                     const qrBuffer = await qrcode.toBuffer(qr);
                     await ctx.replyWithPhoto(
                         { source: qrBuffer },
                         { 
-                            caption: `📸 **يرجى مسح رمز الاستجابة السريع (QR) للحساب رقم (${accountIndex}) من تطبيق واتساب:**\n\n` +
-                                     `1. افتح واتساب في هاتفك.\n` +
-                                     `2. اذهب إلى الإعدادات > الأجهزة المرتبطة > ربط جهاز.\n` +
-                                     `3. امسح الكود أعلاه.` 
+                            caption: `ðŸ“¸ **ÙŠØ±Ø¬Ù‰ Ù…Ø³Ø­ Ø±Ù…Ø² Ø§Ù„Ø§Ø³ØªØ¬Ø§Ø¨Ø© Ø§Ù„Ø³Ø±ÙŠØ¹ (QR) Ù„Ù„Ø­Ø³Ø§Ø¨ Ø±Ù‚Ù… (${accountIndex}) Ù…Ù† ØªØ·Ø¨ÙŠÙ‚ ÙˆØ§ØªØ³Ø§Ø¨:**\n\n` +
+                                     `1. Ø§ÙØªØ­ ÙˆØ§ØªØ³Ø§Ø¨ ÙÙŠ Ù‡Ø§ØªÙÙƒ.\n` +
+                                     `2. Ø§Ø°Ù‡Ø¨ Ø¥Ù„Ù‰ Ø§Ù„Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª > Ø§Ù„Ø£Ø¬Ù‡Ø²Ø© Ø§Ù„Ù…Ø±ØªØ¨Ø·Ø© > Ø±Ø¨Ø· Ø¬Ù‡Ø§Ø².\n` +
+                                     `3. Ø§Ù…Ø³Ø­ Ø§Ù„ÙƒÙˆØ¯ Ø£Ø¹Ù„Ø§Ù‡.` 
                         }
                     );
                 } catch (qrErr) {
-                    console.error('خطأ في إرسال الـ QR:', qrErr);
+                    console.error('Ø®Ø·Ø£ ÙÙŠ Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„Ù€ QR:', qrErr);
                 }
             }
 
             if (connection === 'open' && !connected) {
                 connected = true;
                 clearTimeout(timeout);
-                console.log(`✅ تم الاتصال بـ WhatsApp بنجاح للحساب ${accountIndex}`);
-                await ctx.reply(`✅ **تم ربط وتوصيل الحساب رقم (${accountIndex}) بنجاح!**`);
+                console.log(`âœ… ØªÙ… Ø§Ù„Ø§ØªØµØ§Ù„ Ø¨Ù€ WhatsApp Ø¨Ù†Ø¬Ø§Ø­ Ù„Ù„Ø­Ø³Ø§Ø¨ ${accountIndex}`);
+                await ctx.reply(`âœ… **ØªÙ… Ø±Ø¨Ø· ÙˆØªÙˆØµÙŠÙ„ Ø§Ù„Ø­Ø³Ø§Ø¨ Ø±Ù‚Ù… (${accountIndex}) Ø¨Ù†Ø¬Ø§Ø­!**`);
                 resolve(sock);
             }
 
@@ -84,10 +84,10 @@ async function getWaSocket(accountIndex, ctx) {
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
                 const errorMessage = lastDisconnect?.error?.message || '';
                 
-                console.log(`⚠️ انقطع الاتصال للحساب ${accountIndex} - الكود: ${statusCode}`);
+                console.log(`âš ï¸ Ø§Ù†Ù‚Ø·Ø¹ Ø§Ù„Ø§ØªØµØ§Ù„ Ù„Ù„Ø­Ø³Ø§Ø¨ ${accountIndex} - Ø§Ù„ÙƒÙˆØ¯: ${statusCode}`);
 
                 if (statusCode === 515 || errorMessage.includes('restart required')) {
-                    console.log('🔄 إعادة تشغيل الاتصال تلقائياً (رمز 515)...');
+                    console.log('ðŸ”„ Ø¥Ø¹Ø§Ø¯Ø© ØªØ´ØºÙŠÙ„ Ø§Ù„Ø§ØªØµØ§Ù„ ØªÙ„Ù‚Ø§Ø¦ÙŠØ§Ù‹ (Ø±Ù…Ø² 515)...');
                     setTimeout(async () => {
                         try {
                             const newSock = await getWaSocket(accountIndex, ctx);
@@ -99,7 +99,7 @@ async function getWaSocket(accountIndex, ctx) {
                 } else if (!connected && !closed) {
                     closed = true;
                     clearTimeout(timeout);
-                    reject(new Error(`تم إغلاق اتصال الحساب ${accountIndex}. الكود: ${statusCode || 'غير معروف'}`));
+                    reject(new Error(`ØªÙ… Ø¥ØºÙ„Ø§Ù‚ Ø§ØªØµØ§Ù„ Ø§Ù„Ø­Ø³Ø§Ø¨ ${accountIndex}. Ø§Ù„ÙƒÙˆØ¯: ${statusCode || 'ØºÙŠØ± Ù…Ø¹Ø±ÙˆÙ'}`));
                 }
             }
         });
@@ -107,11 +107,11 @@ async function getWaSocket(accountIndex, ctx) {
 }
 
 /**
- * دالة الفحص الرئيسية المتعددة الحسابات
+ * Ø¯Ø§Ù„Ø© Ø§Ù„ÙØ­Øµ Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ© Ø§Ù„Ù…ØªØ¹Ø¯Ø¯Ø© Ø§Ù„Ø­Ø³Ø§Ø¨Ø§Øª
  */
 async function startMultiAccountScanner(usernamesFile, scanConfig = {}, ctx, onProgress = async () => {}, control = {}) {
     if (!fs.existsSync(usernamesFile)) {
-        throw new Error('ملف usernames.txt غير موجود');
+        throw new Error('Ù…Ù„Ù usernames.txt ØºÙŠØ± Ù…ÙˆØ¬ÙˆØ¯');
     }
 
     const accountsCount = scanConfig.accountsCount || 1;
@@ -127,7 +127,7 @@ async function startMultiAccountScanner(usernamesFile, scanConfig = {}, ctx, onP
         .filter(Boolean);
 
     if (usernames.length === 0) {
-        throw new Error('الملف فارغ ولا يحتوي على أسماء مستخدمين');
+        throw new Error('Ø§Ù„Ù…Ù„Ù ÙØ§Ø±Øº ÙˆÙ„Ø§ ÙŠØ­ØªÙˆÙŠ Ø¹Ù„Ù‰ Ø£Ø³Ù…Ø§Ø¡ Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ†');
     }
 
     const fileHash = await getFileHash(usernamesFile);
@@ -190,7 +190,7 @@ async function startMultiAccountScanner(usernamesFile, scanConfig = {}, ctx, onP
 
         if (control.isCancelled) {
             try { sock.ws?.close(); } catch {}
-            await ctx.reply('🛑 **تم إيقاف وتصفير عملية الفحص بناءً على طلبك.**');
+            await ctx.reply('ðŸ›‘ **ØªÙ… Ø¥ÙŠÙ‚Ø§Ù ÙˆØªØµÙÙŠØ± Ø¹Ù…Ù„ÙŠØ© Ø§Ù„ÙØ­Øµ Ø¨Ù†Ø§Ø¡Ù‹ Ø¹Ù„Ù‰ Ø·Ù„Ø¨Ùƒ.**');
             return;
         }
 
@@ -198,7 +198,7 @@ async function startMultiAccountScanner(usernamesFile, scanConfig = {}, ctx, onP
         if (checkCount > 0 && checkCount % switchInterval === 0 && accountsCount > 1) {
             try { sock.ws?.close(); } catch {}
             activeAccountIndex = (activeAccountIndex % accountsCount) + 1;
-            await ctx.reply(`🔄 **جاري التبديل إلى الحساب رقم (${activeAccountIndex})...**`);
+            await ctx.reply(`ðŸ”„ **Ø¬Ø§Ø±ÙŠ Ø§Ù„ØªØ¨Ø¯ÙŠÙ„ Ø¥Ù„Ù‰ Ø§Ù„Ø­Ø³Ø§Ø¨ Ø±Ù‚Ù… (${activeAccountIndex})...**`);
             sock = await getWaSocket(activeAccountIndex, ctx);
         }
 
@@ -240,7 +240,7 @@ async function startMultiAccountScanner(usernamesFile, scanConfig = {}, ctx, onP
                                 errMessage.toLowerCase().includes('rate limit') || 
                                 errMessage.toLowerCase().includes('resource-exhausted');
 
-            await ctx.reply(`⚠️ خطأ في فحص اليوزر \`${username}\`: ${errMessage}`);
+            await ctx.reply(`âš ï¸ Ø®Ø·Ø£ ÙÙŠ ÙØ­Øµ Ø§Ù„ÙŠÙˆØ²Ø± \`${username}\`: ${errMessage}`);
             
             await sleep(5000);
             sock = await getWaSocket(activeAccountIndex, ctx);
@@ -248,7 +248,7 @@ async function startMultiAccountScanner(usernamesFile, scanConfig = {}, ctx, onP
     }
 
     try { sock.ws?.close(); } catch {}
-    await ctx.reply('🎉 **تم الانتهاء من فحص جميع اليوزرات بنجاح!**');
+    await ctx.reply('ðŸŽ‰ **ØªÙ… Ø§Ù„Ø§Ù†ØªÙ‡Ø§Ø¡ Ù…Ù† ÙØ­Øµ Ø¬Ù…ÙŠØ¹ Ø§Ù„ÙŠÙˆØ²Ø±Ø§Øª Ø¨Ù†Ø¬Ø§Ø­!**');
 }
 
 module.exports = {
