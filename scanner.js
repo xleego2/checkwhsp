@@ -4,10 +4,10 @@ const path = require('path');
 const crypto = require('crypto');
 const qrcode = require('qrcode');
 
-const {
+const { 
     default: makeWASocket,
     useMultiFileAuthState
-} = require('@dexterid/baileys');
+, fetchLatestBaileysVersion, Browsers } = require("@dexterid/baileys");
 
 const BASE_SESSIONS_PATH = './sessions';
 const RESULTS_PATH = './results';
@@ -33,7 +33,10 @@ async function getWaSocket(accountIndex, ctx) {
     await fsPromises.mkdir(sessionDir, { recursive: true });
 
     const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
+    const sock = const { version } = await fetchLatestBaileysVersion();
     const sock = makeWASocket({
+      version,
+      browser: Browsers.ubuntu("Desktop"),
         auth: state,
         printQRInTerminal: false
     });
