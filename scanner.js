@@ -35,11 +35,14 @@ async function getWaSocket(accountIndex, ctx) {
     const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
     const { version } = await fetchLatestBaileysVersion();
     const sock = makeWASocket({
-      version,
-      browser: Browsers.ubuntu("Desktop"),
-        auth: state,
-        printQRInTerminal: false
-    });
+auth: state,
+printQRInTerminal: true,
+browser: ['Ubuntu', 'Chrome', '20.0.04'],
+syncFullHistory: false,
+markOnlineOnConnect: false,
+connectTimeoutMs: 60000,
+defaultQueryTimeoutMs: undefined,
+});
 
     sock.ev.on('creds.update', saveCreds);
 
